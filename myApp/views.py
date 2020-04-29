@@ -30,7 +30,8 @@ def login(request):
 
             res_data =  {
                     "name": result['name'],
-                    "uid": result['uid']
+                    "uid": result['uid'],
+                    "username": result['username']
                 }
 
 
@@ -76,7 +77,8 @@ def user_info(request):
                 "status": True,
                 "data": {
                     "uid": user['uid'],
-                    "name": user['name']
+                    "name": user['name'],
+                    "username": user['username']
                 }
             }))
         else:
@@ -87,3 +89,36 @@ def user_info(request):
         return HttpResponse(json.dumps({
             "status": False,
         }))
+
+
+# 更新用户信息
+def user_update(request):
+    user = request.session.get('user_id', False)
+    if request.method == 'POST' and user:
+        params = json.loads(request.body)
+        name = params.get('name', None)
+        username = params.get('username', None)
+        password = params.get('password', None)
+
+        result = models.UserInfo.objects.filter(
+            username=username
+        ).update(
+            name=name,
+            password=password
+        )
+        if result:
+            res_data = {
+                "uid": user['uid'],
+                "name": name,
+                "username": username
+            }
+
+            res = HttpResponse(json.dumps({
+                "status": True,
+                "data": res_data
+            }))
+            request.session['user_id'] = res_data
+            return res
+    return HttpResponse(json.dumps({
+        "status": False,
+    }))
