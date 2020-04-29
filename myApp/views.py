@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render,redirect
 from django.http import HttpResponse,HttpResponseRedirect
 from django.http import HttpResponse
+from django.contrib import auth
 from myApp import  models
 import json
 
@@ -26,14 +27,63 @@ def login(request):
         if userInfo:
             result = list(userInfo.values())[0]
             print(result)
-            return HttpResponse(json.dumps({
-                "status": True,
-                "data": {
+
+            res_data =  {
                     "name": result['name'],
                     "uid": result['uid']
                 }
+
+
+            res = HttpResponse(json.dumps({
+                "status": True,
+                "data": res_data
             }))
+
+            request.session['user_id'] = res_data
+            # res.set_cookie("samesite", "None")
+
+            return res
         return HttpResponse(json.dumps({
             "status": False,
             "data": 'admin'
+        }))
+
+# 登出接口
+def logout(request):
+    if request.method == 'GET':
+        user = request.session.get('user_id', False)
+        # session 存在则删除
+        if user:
+            del request.session['user_id']
+            return HttpResponse(json.dumps({
+                "status": True,
+                "data": "退出登录成功！"
+            }))
+        else:
+            return HttpResponse(json.dumps({
+                "status": False,
+                "data": "退出登录失败！"
+            }))
+
+
+# 获取用户信息
+def user_info(request):
+    if request.method == 'GET':
+        user = request.session.get('user_id', False)
+        print(user)
+        if user:
+            return HttpResponse(json.dumps({
+                "status": True,
+                "data": {
+                    "uid": user['uid'],
+                    "name": user['name']
+                }
+            }))
+        else:
+            return HttpResponse(json.dumps({
+                "status": False,
+            }))
+    else:
+        return HttpResponse(json.dumps({
+            "status": False,
         }))

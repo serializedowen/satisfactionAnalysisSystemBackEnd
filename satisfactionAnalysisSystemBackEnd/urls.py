@@ -20,5 +20,8 @@ from myApp import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^login$', views.login, name='login'),
+    re_path(r'^logout$', views.logout, name='logout'),
+    re_path(r'^user/info$', views.user_info, name='user_info'),
+
     path('', views.index, name='home'),
 ]
