@@ -8,6 +8,7 @@ import time
 import copy
 import json
 from myApp.data_procession import procession
+from myApp.measurement_model import measurement
 
 # procession = data_procession.procession
 
@@ -277,3 +278,41 @@ def data_del(request):
     return HttpResponse(json.dumps({
         "status": False,
     }))
+
+
+def model_submit(request):
+    if request.method == 'POST':
+        params = json.loads(request.body)
+        dataSource = params.get('dataSource', None)
+        lam = params.get('lam', None)
+        method = params.get('method', None)
+        step = params.get('step', None)
+        max_iter = params.get('max_iter', None)
+        rdd = params.get('rdd', None)
+        type = params.get('type', None)
+        name = params.get('name', None)
+
+        base_path = list(models.DataInfo.objects.filter(uid=dataSource).values("url"))
+        if dataSource and lam and method and step and max_iter and rdd and type and name and type == 'measurement':
+            time_ = time.strftime('%b %d %Y %H:%M:%S')
+            result = measurement(base_path[0]['url'],eval(lam), step, max_iter, rdd)
+            print(result)
+            if result:
+                db_res = models.ModelInfo.objects.create(
+                    did=dataSource,
+                    type=type,
+                    name=name,
+                    time=time_,
+                    lam=result['lam'],
+                    error_var_e=result['error_var_e'],
+                    phi=result['phi']
+
+                )
+                return HttpResponse(json.dumps({
+                    "status": True,
+                }))
+
+    return HttpResponse(json.dumps({
+        "status": False,
+    }))
+
