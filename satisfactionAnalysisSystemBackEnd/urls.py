@@ -18,11 +18,18 @@ from django.urls import path, re_path
 from myApp import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    re_path(r'^admin/', admin.site.urls),
     re_path(r'^login$', views.login, name='login'),
     re_path(r'^logout$', views.logout, name='logout'),
     re_path(r'^user/info$', views.user_info, name='user_info'),
     re_path(r'^user/update$', views.user_update, name='user_update'),
+    re_path(r'^data/import$', views.data_import, name='data_import'),
+    re_path(r'^dataImport$', views.dataImport, name='data_import'), # 二进制文件上传接口
+    re_path(r'^data/list', views.data_list, name='data_list'),  # 数据列表
+    re_path(r'^data/info', views.data_info, name='data_info'),  # 数据详情
+    re_path(r'^data/del', views.data_del, name='data_del'),  # 数据详删除
+
+
 
     path('', views.index, name='home'),
 ]

@@ -4,3 +4,4 @@ from myApp import models
 
 # 注册表字段到管理页面
 admin.site.register(models.UserInfo)
+admin.site.register(models.DataInfo)
