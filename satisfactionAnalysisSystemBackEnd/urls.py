@@ -25,9 +25,16 @@ urlpatterns = [
     re_path(r'^user/update$', views.user_update, name='user_update'),
     re_path(r'^data/import$', views.data_import, name='data_import'),
     re_path(r'^dataImport$', views.dataImport, name='data_import'), # 二进制文件上传接口
-    re_path(r'^data/list', views.data_list, name='data_list'),  # 数据列表
-    re_path(r'^data/info', views.data_info, name='data_info'),  # 数据详情
-    re_path(r'^data/del', views.data_del, name='data_del'),  # 数据详删除
+    re_path(r'^data/list$', views.data_list, name='data_list'),  # 数据列表
+    re_path(r'^data/info$', views.data_info, name='data_info'),  # 数据详情
+    re_path(r'^data/del$', views.data_del, name='data_del'),  # 数据详删除
+    re_path(r'^model/submit$', views.model_submit, name='model_submit'),  # 模型上传配置接口
+    re_path(r'^model/list$', views.model_list, name='model_list'),  # 模型数据获取
+    re_path(r'^model/del$', views.model_del, name='model_del'),  # 删除模型数据获取
+    re_path(r'^model/info', views.model_info, name='model_info'),  # 模型数据详情获取
+
+
+
 
 
 

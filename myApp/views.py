@@ -9,6 +9,7 @@ import copy
 import json
 from myApp.data_procession import procession
 from myApp.measurement_model import measurement
+from myApp.structural_model import structural
 
 # procession = data_procession.procession
 
@@ -205,7 +206,7 @@ def dataImport(request):
 
 def data_list(request):
     if request.method == 'GET':
-        res = list(models.DataInfo.objects.values("uid", "displayName", "time", "url"))
+        res = list(models.DataInfo.objects.values("uid", "displayName", "time", "url").order_by('-uid'))
         return HttpResponse(json.dumps({
             "status": True,
             "data": res
@@ -292,27 +293,136 @@ def model_submit(request):
         type = params.get('type', None)
         name = params.get('name', None)
 
+        x = params.get('x', None)
+        y = params.get('y', None)
+        lam_x = params.get('lam_x', None)
+        lam_y = params.get('lam_y', None)
+        beta = params.get('beta', None)
+        gamma = params.get('gamma', None)
+
         base_path = list(models.DataInfo.objects.filter(uid=dataSource).values("url"))
+
         if dataSource and lam and method and step and max_iter and rdd and type and name and type == 'measurement':
             time_ = time.strftime('%b %d %Y %H:%M:%S')
             result = measurement(base_path[0]['url'],eval(lam), step, max_iter, rdd)
             print(result)
-            if result:
-                db_res = models.ModelInfo.objects.create(
+            if result['status']:
+                models.ModelInfo.objects.create(
                     did=dataSource,
                     type=type,
                     name=name,
                     time=time_,
                     lam=result['lam'],
                     error_var_e=result['error_var_e'],
-                    phi=result['phi']
-
+                    phi=result['phi'],
+                    ready_a=True,
                 )
                 return HttpResponse(json.dumps({
                     "status": True,
                 }))
+            else:
+                models.ModelInfo.objects.create(
+                    did=dataSource,
+                    type=type,
+                    name=name,
+                    time=time_,
+                    ready_a=False,
+                    ready_b=result['msg']
+                )
+                print('运行失败')
+
+        if dataSource and gamma and beta and x and y and lam_x and lam_y and method and step and max_iter and type and name and type == 'structural':
+            time_ = time.strftime('%b %d %Y %H:%M:%S')
+            result = structural(base_path[0]['url'], eval(y), eval(x), eval(lam_x), eval(lam_y), eval(beta), eval(gamma), method, step, max_iter)
+            print(result)
+            if result['status']:
+                models.ModelInfo.objects.create(
+                    did=dataSource,
+                    type=type,
+                    name=name,
+                    time=time_,
+                    lam_x=result['lam_x'],
+                    lam_y=result['lam_y'],
+                    phi_x=result['phi_x'],
+                    beta=result['beta'],
+                    gamma=result['gamma'],
+                    var_e=result['var_e'],
+                    var_e_x=result['var_e_x'],
+                    var_e_y=result['var_e_y'],
+                    ready_a=True,
+                )
+                return HttpResponse(json.dumps({
+                    "status": True,
+                }))
+            else:
+                models.ModelInfo.objects.create(
+                    did=dataSource,
+                    type=type,
+                    name=name,
+                    time=time_,
+                    ready_a=False,
+                    ready_b=result['msg']
+                )
+                print('运行失败')
+
 
     return HttpResponse(json.dumps({
         "status": False,
     }))
 
+
+def model_list(request):
+    if request.method == 'GET':
+
+        data_list = list(models.DataInfo.objects.values("uid").order_by('-uid'))
+
+        data_uid_list = []
+        if data_list:
+            for uid_item in data_list:
+                data_uid_list.append(uid_item['uid'])
+        model_lists = list(models.ModelInfo.objects.values("mid", "did", "type", "name", "time", "ready_a", "ready_b").order_by('-mid'))
+
+        res = {}
+        for uid in data_uid_list:
+            model_item_list = []
+            for model in model_lists:
+                if model['did'] == str(uid):
+                    model_item_list.append(model)
+            res[str(uid)] = model_item_list
+        return HttpResponse(json.dumps({
+            "status": True,
+            "data": res
+        }))
+
+    return HttpResponse(json.dumps({
+        "status": False,
+    }))
+
+
+def model_del(request):
+    if request.method == 'GET':
+        mid = request.GET.get('mid', None)
+        result = models.ModelInfo.objects.filter(mid=mid).delete()
+        return HttpResponse(json.dumps({
+            "status": True,
+            "data": "删除成功"
+        }))
+    return HttpResponse(json.dumps({
+        "status": False,
+    }))
+
+
+
+
+def model_info(request):
+    if request.method == 'GET':
+        mid = request.GET.get('mid', None)
+        result = list(models.ModelInfo.objects.filter(mid=mid).values())
+        if result:
+            return HttpResponse(json.dumps({
+                "status": True,
+                "data": result[0]
+            }))
+    return HttpResponse(json.dumps({
+        "status": False,
+    }))
