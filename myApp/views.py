@@ -22,39 +22,43 @@ def index(request):
 
 # 登录接口
 def login(request):
-    if request.method == 'GET':
-        return HttpResponse(json.dumps({
-            "status": False
-        }), content_type="application/json")
-    else:
-        # 前端通过json来传输参数，所以这里通过json.loads转化格式
-        params = json.loads(request.body)
+    try:
+        if request.method == 'GET':
+            return HttpResponse(json.dumps({
+                "status": False
+            }), content_type="application/json")
+        else:
+            print(request.body)
+            # 前端通过json来传输参数，所以这里通过json.loads转化格式
+            params = json.loads(request.body.decode('utf-8'))
 
-        userInfo = models.UserInfo.objects.filter(username=params.get('username', None), password=params.get('password', None))
-        if userInfo:
-            result = list(userInfo.values())[0]
-            print(result)
+            userInfo = models.UserInfo.objects.filter(username=params.get('username', None), password=params.get('password', None))
+            if userInfo:
+                result = list(userInfo.values())[0]
+                print(result)
 
-            res_data =  {
-                    "name": result['name'],
-                    "uid": result['uid'],
-                    "username": result['username']
-                }
+                res_data =  {
+                        "name": result['name'],
+                        "uid": result['uid'],
+                        "username": result['username']
+                    }
 
 
-            res = HttpResponse(json.dumps({
-                "status": True,
-                "data": res_data
+                res = HttpResponse(json.dumps({
+                    "status": True,
+                    "data": res_data
+                }))
+
+                request.session['user_id'] = res_data
+                # res.set_cookie("samesite", "None")
+
+                return res
+            return HttpResponse(json.dumps({
+                "status": False,
+                "data": 'admin'
             }))
-
-            request.session['user_id'] = res_data
-            # res.set_cookie("samesite", "None")
-
-            return res
-        return HttpResponse(json.dumps({
-            "status": False,
-            "data": 'admin'
-        }))
+    except Exception as e:
+        print(e)
 
 # 登出接口
 def logout(request):
@@ -102,7 +106,7 @@ def user_info(request):
 def user_update(request):
     user = request.session.get('user_id', False)
     if request.method == 'POST' and user:
-        params = json.loads(request.body)
+        params = json.loads(request.body.decode('utf-8'))
         name = params.get('name', None)
         username = params.get('username', None)
         password = params.get('password', None)
@@ -134,7 +138,7 @@ def user_update(request):
 def data_import(request):
     if request.method == "POST":
         print(request.FILES)
-        params = json.loads(request.body)
+        params = json.loads(request.body.decode('utf-8'))
         dataFile = params.get('dataFile', None)
         displayName = params.get('displayName', None)
 
@@ -217,7 +221,7 @@ def data_list(request):
 
 def data_info(request):
     if request.method == 'POST':
-        params = json.loads(request.body)
+        params = json.loads(request.body.decode('utf-8'))
         uid = params.get('uid', None)
         res = list(models.DataInfo.objects.filter(uid=uid).values())[0]
         print(res['titleList'])
@@ -283,7 +287,7 @@ def data_del(request):
 
 def model_submit(request):
     if request.method == 'POST':
-        params = json.loads(request.body)
+        params = json.loads(request.body.decode('utf-8'))
         dataSource = params.get('dataSource', None)
         lam = params.get('lam', None)
         method = params.get('method', None)
@@ -410,7 +414,6 @@ def model_del(request):
     return HttpResponse(json.dumps({
         "status": False,
     }))
-
 
 
 
